@@ -2,10 +2,13 @@ import Nav from './components/nav';
 import {useForm} from 'react-hook-form';
 import axios from 'axios';
 import {useRouter} from 'next/router';
+import { useCookies } from "react-cookie"
 
 export default function Home() {
 
    const {register, handleSubmit, formState: {errors}} = useForm();
+
+   const [cookie, setCookie] = useCookies(["accessToken"]);
 
    const router = useRouter();
 
@@ -14,12 +17,16 @@ export default function Home() {
         username: data.username,
         email: data.email,
         password: data.password
-    }).then(res => {
-        const token = res.data.acessToken;
-        cookieCutter.set('appAccessToken', token); //setting up the cookie
-        router.push('/')
+    }).then((res) => {
+        const token = res.data.accessToken;
+        setCookie("accessToken", token, {
+            path: "/",
+            maxAge: 3600*24, // Expires after 24hr
+            sameSite: true,
+          })
     }).catch(err => {
         alert(err.message);
+        router.push('/signup');
     })
    }
     

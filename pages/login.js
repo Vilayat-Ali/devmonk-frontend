@@ -20,7 +20,10 @@ export default function Home() {
         }
     }).then(res => {
         useRouter.push('/');
-    });
+    }).catch(err => {
+        alert(err.message);
+        useRouter.push('/login');
+    })
  }
 
   return (
