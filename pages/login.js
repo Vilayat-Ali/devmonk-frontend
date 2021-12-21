@@ -2,28 +2,32 @@ import '../styles/form.module.css'
 import Nav from './components/nav';
 import {useForm} from 'react-hook-form';
 import {useRouter} from 'next/router';
+import axios from 'axios';
 
-export default function Home() {
+export default function Login() {
 
  const {register, formState: {errors}, handleSubmit} = useForm();
 
- const handlesubmit = async(data) => {
-    const token = cookieCutter.get('appAccessToken'); // fetch cookie with token
+ const onsubmit = async(data) => {
+     var genToken = "";
     await axios.post("http://localhost:8000/api/user/login", {
-        username: data.username,
         email: data.email,
         password: data.password
-    }, {
-        headers: {
-            'authorization': 'Bearer '+token,
-            'content-type': 'application/json'
-        }
     }).then(res => {
-        useRouter.push('/');
+        if(res.data.success === false) alert(res.data.message)
+        genToken = res.data.refreshToken;
     }).catch(err => {
         alert(err.message);
-        useRouter.push('/login');
-    })
+    });
+
+    await axios.put("http://localhost:8000/api/user/token", {
+        refreshToken: genToken,
+        username: data.username,
+        email: data.email
+    }).then(res => {
+        localStorage.setItem("accessToken", res.data.accessToken);
+        alert('user logged in!')
+    });
  }
 
   return (
@@ -33,21 +37,29 @@ export default function Home() {
         <Nav type="banner" purpose="Login"/>
 
         <div className="container">
-        <form onSubmit={handleSubmit(handlesubmit)}>
+        <form onSubmit={handleSubmit(onsubmit)}>
                     <div className="form-group">
-                        <label For="email">Email address</label>
-                        <input type="email" className="form-control"
+                        <label htmlFor="username">Username</label>
+                        <input type="username" className="form-control" name="username"
+                         id="username" aria-describedby="usernameHelp" 
+                         placeholder="Enter your username here" 
+                         style={{width: '40%', padding: '10px'}}
+                         {...register('username')}/>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="email" style={{marginTop: '15px'}}>Email address</label>
+                        <input type="email" className="form-control" name="email"
                          id="email" aria-describedby="emailHelp" 
                          placeholder="Enter your email here" 
                          style={{width: '40%', padding: '10px'}}
                          {...register('email')}/>
                     </div>
                     <div className="form-group">
-                        <label For="password" style={{marginTop: '15px'}}>Password</label>
-                        <input type="password" className="form-control"
+                        <label htmlFor="password" style={{marginTop: '15px'}}>Password</label>
+                        <input type="password" className="form-control" name="password"
                          id="password" placeholder="Enter your password here"
                           style={{width: '40%', padding: '10px'}}
-                          {...register('email')}/>
+                          {...register('password')}/>
                     </div>
                     <button type="submit" className="btn btn-primary" style={{ marginTop: '15px'}}>Log me in</button>
         </form>
